@@ -165,25 +165,9 @@ impl Graph {
     }
 
     /// This function is used for the execution of a single dag.
-    pub fn start(&mut self) -> Result<(), GraphError> {
+    pub async fn start(&mut self) -> Result<(), GraphError> {
         self.init();
-        let is_loop = self.check_loop_and_partition();
-        if is_loop {
-            return Err(GraphError::GraphLoopDetected);
-        }
-
-        if !self.is_active.load(Ordering::Relaxed) {
-            return Err(GraphError::GraphNotActive);
-        }
-
-        tokio::runtime::Runtime::new()
-            .unwrap()
-            .block_on(async { self.run().await })
-    }
-
-    pub async fn start_async(&mut self) -> Result<(), GraphError> {
-        self.init();
-        let is_loop = self.check_loop_and_partition();
+        let is_loop = self.check_loop_and_partition().await;
         if is_loop {
             return Err(GraphError::GraphLoopDetected);
         }
@@ -323,7 +307,7 @@ impl Graph {
     /// - Groups nodes into blocks, creating a new block whenever a conditional node / loop is encountered
     ///
     /// Returns true if the graph contains a cycle, false otherwise.
-    pub fn check_loop_and_partition(&mut self) -> bool {
+    pub async fn check_loop_and_partition(&mut self) -> bool {
         // Check for cycles using abstract graph
         let has_cycle = self.abstract_graph.check_loop();
 
@@ -348,7 +332,7 @@ impl Graph {
 
                 // Create new block if conditional node / loop encountered
                 let node = self.nodes.get(node_id).unwrap();
-                if node.blocking_lock().is_condition() {
+                if node.lock().await.is_condition() {
                     self.blocks.push(current_block);
                     current_block = HashSet::new();
                 }
