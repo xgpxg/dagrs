@@ -146,7 +146,7 @@ impl Graph {
         }
         for to_id in &to_ids {
             if let Some(to_node_lock) = self.nodes.get_mut(to_id) {
-                let mut to_node = to_node_lock.blocking_lock();
+                let mut to_node = to_node_lock.lock().await;
                 let to_channel = to_node.input_channels();
                 if let Some(rx) = rx_map.remove(&to_id) {
                     to_channel.insert(from_id, Arc::new(Mutex::new(InChannel::Mpsc(rx))));
