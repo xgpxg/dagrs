@@ -167,11 +167,11 @@ impl Graph {
     /// This function is used for the execution of a single dag.
     pub fn start(&mut self) -> Result<(), GraphError> {
         self.init();
-        let is_loop = self.check_loop_and_partition();
-        if is_loop {
-            //return Err(GraphError::GraphLoopDetected);
-            log::warn!("Graph contains loop.");
-        }
+
+        // let is_loop = self.check_loop_and_partition();
+        // if is_loop {
+        //     return Err(GraphError::GraphLoopDetected);
+        // }
 
         if !self.is_active.load(Ordering::Relaxed) {
             return Err(GraphError::GraphNotActive);
