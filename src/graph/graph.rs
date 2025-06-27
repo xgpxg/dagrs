@@ -181,6 +181,20 @@ impl Graph {
             .block_on(async { self.run().await })
     }
 
+    pub async fn start_async(&mut self) -> Result<(), GraphError> {
+        self.init();
+        let is_loop = self.check_loop_and_partition();
+        if is_loop {
+            return Err(GraphError::GraphLoopDetected);
+        }
+
+        if !self.is_active.load(Ordering::Relaxed) {
+            return Err(GraphError::GraphNotActive);
+        }
+
+        self.run().await
+    }
+
     /// Executes the graph's nodes in a concurrent manner, respecting the block structure.
     ///
     /// - Executes nodes in blocks, where blocks are separated by conditional nodes
