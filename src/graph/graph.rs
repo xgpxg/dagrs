@@ -119,14 +119,14 @@ impl Graph {
     /// If the outgoing port of the sending node is empty and the number of receiving nodes is > 1, use the broadcast channel
     /// An MPSC channel is used if the outgoing port of the sending node is empty and the number of receiving nodes is equal to 1
     /// If the outgoing port of the sending node is not empty, adding any number of receiving nodes will change all relevant channels to broadcast
-    pub fn add_edge(&mut self, from_id: NodeId, all_to_ids: Vec<NodeId>) {
+    pub async fn add_edge(&mut self, from_id: NodeId, all_to_ids: Vec<NodeId>) {
         let to_ids = Self::remove_duplicates(all_to_ids);
         let mut rx_map: HashMap<NodeId, mpsc::Receiver<Content>> = HashMap::new();
 
         // Update channels
         {
             let from_node_lock = self.nodes.get_mut(&from_id).unwrap();
-            let mut from_node = from_node_lock.blocking_lock();
+            let mut from_node = from_node_lock.lock().await;
             let from_channel = from_node.output_channels();
 
             for to_id in &to_ids {
